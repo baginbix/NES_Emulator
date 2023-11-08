@@ -1,6 +1,5 @@
-use std::{collections::HashMap, hash::Hash, arch::global_asm};
+use std::collections::HashMap;
 use crate::opcodes;
-use bitflags::bitflags;
 
 const STACK: u16 = 0x0100;
 
@@ -10,7 +9,7 @@ pub struct CPU{
     pub register_x: u8,
     pub register_y: u8,
     
-    /// # Status Register (P) http://wiki.nesdev.com/w/index.php/Status_flagszs
+    /// # Status Register (P) http://wiki.nesdev.com/w/index.php/Status_flags
     ///  7 6 5 4 3 2 1 0
     ///  N V _ B D I Z C
     ///  | |   | | | | +--- Carry Flag
@@ -320,7 +319,29 @@ impl CPU{
             }
 
             self.update_zero_and_negative_flags(data as u8);
-            self.register_a = data as u8;
+            
+
+            let result = data as u8;
+            if (data ^ result as u16) & (result ^ self.register_a) as u16 & 0x80 != 0 {
+                self.status = self.status | 0b0100_0000;
+            } else {
+                self.status = self.status & 0b1011_1111;
+            } 
+
+            self.register_a = result;
+        }
+
+        fn and(&mut self, mode: &AddressingMode){
+            let addr = self.get_operand_address(mode);
+            let data = self.mem_read(addr);
+
+            self.register_a = self.register_a & data;
+
+            self.update_zero_and_negative_flags(self.register_a);
+        }
+
+        fn asl(&mut self, mode: &AddressingMode){
+            
         }
 
         fn update_zero_and_negative_flags(&mut self, result: u8){

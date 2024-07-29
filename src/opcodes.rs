@@ -1,6 +1,6 @@
 use crate::cpu::AddressingMode;
 use std::collections::HashMap;
-
+#[derive(Debug)]
 pub struct OpCode{
     pub code: u8,
     pub mnemonic: &'static str,
@@ -19,6 +19,8 @@ impl OpCode{
         }
     }
 }
+
+
 lazy_static!{   
     pub static ref CPU_OPS_CODES: Vec<OpCode> = vec![
         OpCode::new(0x00, "BRK", 1, 7, AddressingMode::NoneAddressing),

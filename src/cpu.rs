@@ -89,7 +89,6 @@ impl CPU{
             program_counter: 0,
             register_x: 0,
             register_y: 0,
-            //memory: [0; 0xffff],
             stack_pointer: 0xff,
             bus: bus
         }

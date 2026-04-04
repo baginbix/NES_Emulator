@@ -2,13 +2,15 @@ pub mod cpu;
 pub mod opcodes;
 pub mod bus;
 pub mod cartridge;
+pub mod addr_register;
+pub mod PPU;
 
 use std::{collections::HashMap, default, fmt::format, thread::sleep, time::Duration};
 
 use bus::Bus;
 use cpu::{Mem, CPU};
 use rand::{thread_rng, Rng};
-use sdl2::{event::Event, keyboard::Keycode, pixels::{Color, PixelFormatEnum}, EventPump};
+use sdl3::{EventPump, event::Event, keyboard::Keycode, pixels::{Color, PixelFormat}};
 
 #[macro_use]
 extern crate lazy_static; 
@@ -75,7 +77,7 @@ fn read_screen_state(cpu: &CPU, frame: &mut [u8; 32*3*32]) -> bool{
 
 
 fn main() {
-    let sdl_context = sdl2::init().unwrap();
+    let sdl_context = sdl3::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
     let window = video_subsystem
     .window("Snake Game", (32 * 10) as u32,(32 * 10) as u32)
@@ -83,12 +85,12 @@ fn main() {
     .build()
     .unwrap();
 
-    let mut canvas = window.into_canvas().present_vsync().build().unwrap();
+    let mut canvas = window.into_canvas();
     let mut event_pump = sdl_context.event_pump().unwrap();
     canvas.set_scale(10.0, 10.0).unwrap();
 
     let creator = canvas.texture_creator();
-    let mut texture = creator.create_texture_target(PixelFormatEnum::RGB24, 32, 32).unwrap();
+    let mut texture = creator.create_texture_target(PixelFormat::RGB24, 32, 32).unwrap();
 
 
     let game_code = vec![

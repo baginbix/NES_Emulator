@@ -86,7 +86,7 @@ impl CPU{
         CPU{
             register_a: 0,
             status: 0b100100,
-            program_counter: 0,
+            program_counter: 0x8000,
             register_x: 0,
             register_y: 0,
             stack_pointer: 0xff,
@@ -829,9 +829,10 @@ mod test {
 
     #[test]
     fn test_0xa9_lda_immediate_load_data(){
-        let rom = cartridge::test::test_rom();
+        let rom = cartridge::test::test_rom(vec![0xa9,0x05,0x00]);
         let mut cpu = CPU::new(Bus::new(rom));
-        cpu.load_and_run(vec![0xa9,0x05, 0x00]);
+        //cpu.load_and_run(vec![0xa9,0x05, 0x00]);
+        cpu.run();
         assert_eq!(cpu.register_a, 5);
         assert!(cpu.status & 0b0000_0010 == 0);
         assert!(cpu.status & 0b1000_0000 == 0);
@@ -840,64 +841,64 @@ mod test {
 
     #[test]
     fn test_0xa9_lda_zero_flag(){
-        let rom = cartridge::test::test_rom();
+        let rom = cartridge::test::test_rom(vec![0xa9, 0x00, 0x00]);
         let mut cpu = CPU::new(Bus::new(rom));
-        cpu.load_and_run(vec![0xa9, 0x00, 0x00]);
+        cpu.run();
         assert!(cpu.status & 0b0000_0010 == 0b10);
     }
 
     #[test]
     fn test_0xaa_tax_move_a_to_x(){
-        let rom = cartridge::test::test_rom();
+        let rom = cartridge::test::test_rom(vec![0xa9, 0x0A,0xAA, 0x00]);
         let mut cpu = CPU::new(Bus::new(rom));
-        cpu.load_and_run(vec![0xa9, 0x0A,0xAA, 0x00]);  
+        cpu.run();  
 
         assert_eq!(cpu.register_x, 10);
     }
 
     #[test]
     fn test_5_ops_working_together(){
-        let rom = cartridge::test::test_rom();
+        let rom = cartridge::test::test_rom(vec![0xa9,0xc0, 0xaa, 0xe8, 0x00 ]);
         let mut cpu = CPU::new(Bus::new(rom));
-        cpu.load_and_run(vec![0xa9,0xc0, 0xaa, 0xe8, 0x00 ]);
+        cpu.run();
 
         assert_eq!(cpu.register_x, 0xc1)
     }
 
     #[test]
     fn test_inx_overflow(){
-        let rom = cartridge::test::test_rom();
+        let rom = cartridge::test::test_rom(vec![0xa9, 0xff, 0xaa,0xe8, 0xe8, 0x00]);
         let mut cpu = CPU::new(Bus::new(rom));
-        cpu.load_and_run(vec![0xa9, 0xff, 0xaa,0xe8, 0xe8, 0x00]);
+        cpu.run();
 
         assert_eq!(cpu.register_x,  1);
     }
 
     #[test]
     fn test_lda_from_memory(){
-        let rom = cartridge::test::test_rom();
+        let rom = cartridge::test::test_rom(vec![0xa5, 0x10, 0x00]);
         let mut cpu = CPU::new(Bus::new(rom));
         cpu.mem_write(0x10, 0x55);
-        cpu.load_and_run(vec![0xa5, 0x10, 0x00]);
+        cpu.run();
 
         assert_eq!(cpu.register_a,  0x55);
     }
     #[test]
     fn test_adc_immediate(){
-        let rom = cartridge::test::test_rom();
+        let rom = cartridge::test::test_rom(vec![0x69, 0x10, 0x00 ]);
         let mut cpu = CPU::new(Bus::new(rom));
 
-        cpu.load_and_run(vec![0x69, 0x10, 0x00 ]);
+        cpu.run();
 
         assert_eq!(cpu.register_a, 0x10);
     }
 
     #[test]
     fn test_adc_immediate_carry_set(){
-        let rom = cartridge::test::test_rom();
+        let rom = cartridge::test::test_rom(vec![0xa5, 0x10,0x69, 0x01, 0x00 ]);
         let mut cpu = CPU::new(Bus::new(rom));
         cpu.mem_write(0x10,0xff);
-        cpu.load_and_run(vec![0xa5, 0x10,0x69, 0x01, 0x00 ]);
+        cpu.run();
         let carry_flag = cpu.status & 0x0000_0001;
         assert_eq!(carry_flag , 0x1);
     }

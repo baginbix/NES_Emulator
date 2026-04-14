@@ -116,10 +116,8 @@ fn main() {
         0xea, 0xca, 0xd0, 0xfb, 0x60
     ];
 
-    let rom = cartridge::test::test_rom();
+    let rom = cartridge::test::test_rom(game_code);
     let mut cpu = CPU::new(Bus::new(rom));
-    cpu.load(game_code);
-    cpu.reset();
 
     let mut screen_state = [0 as u8; 32*3*32];
     let mut rng = thread_rng();
@@ -165,7 +163,7 @@ mod test {
 
    #[test]
    fn test_format_trace() {
-       let mut bus = Bus::new(test_rom());
+       let mut bus = Bus::new(test_rom(vec![0x00]));
        bus.mem_write(100, 0xa2);
        bus.mem_write(101, 0x01);
        bus.mem_write(102, 0xca);
@@ -197,7 +195,7 @@ mod test {
 
    #[test]
    fn test_format_mem_access() {
-       let mut bus = Bus::new(test_rom());
+       let mut bus = Bus::new(test_rom(vec![0x00]));
        // ORA ($33), Y
        bus.mem_write(100, 0x11);
        bus.mem_write(101, 0x33);

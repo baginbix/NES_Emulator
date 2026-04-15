@@ -1,3 +1,5 @@
+use bitflags::bitflags;
+
 bitflags! {
     // 7  bit  0
     // ---- ----

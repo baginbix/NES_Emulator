@@ -58,8 +58,17 @@ impl PPU{
  
     }
 
-    fn mirror_vram_addr(addr:u16) -> u16{
-        
+    fn mirror_vram_addr(&self, addr:u16) -> u16{
+        let mirrored_vram = addr & 0x2fff;
+        let vram_index = mirrored_vram - 0x2000;
+        let nametable = vram_index  / 0x400;
+        match (&self.mirroring, nametable) {
+            (Mirroring::Vertical, 2) | (Mirroring::Vertical, 3) => vram_index -0x800,
+            (Mirroring::Horizontal, 2) => vram_index - 0x400,
+            (Mirroring::Horizontal, 1) => vram_index - 0x400,
+            (Mirroring::Horizontal, 3) => vram_index - 0x800,
+            _=> vram_index,
+        }
     }
 }
  

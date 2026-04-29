@@ -75,5 +75,9 @@ impl PPU{
         self.vram[self.addr.get() as usize] = data;
         self.vram_addr_increment();
     }
+
+    pub fn write_to_scroll(&mut self, data: u8){
+
+    }
 }
  

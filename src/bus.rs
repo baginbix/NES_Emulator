@@ -9,6 +9,7 @@ const PPU_REGISTERS_MIRRORS_END:u16 = 0x3fff;
 const PPU_DATA_REGISTER:u16 = 0x2007;
 const PPU_ADDRESS_REGISTER:u16 = 0x2006;
 const PPU_CTRL_REGISTER:u16 = 0x2000;
+const PPU_SCROLL_REGISTER:u16 = 0x2005;
 
 pub struct Bus{
     cpu_vram: [u8;2048],
@@ -65,6 +66,7 @@ impl Mem for Bus{
                 self.cpu_vram[mirror_down_addr as usize] = data; 
             },
             PPU_CTRL_REGISTER => self.ppu.write_to_ctrl(data),
+            PPU_SCROLL_REGISTER => ,
             PPU_ADDRESS_REGISTER => self.ppu.write_to_addr(data),
             PPU_DATA_REGISTER => self.ppu.write_to_data(data),
             0x2008 ..= PPU_REGISTERS_MIRRORS_END =>{

@@ -3,7 +3,7 @@ pub mod opcodes;
 pub mod bus;
 pub mod cartridge;
 pub mod addr_register;
-pub mod PPU;
+pub mod ppu;
 pub mod control_register;
 use std::{collections::HashMap, default, fmt::format, thread::sleep, time::Duration};
 

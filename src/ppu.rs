@@ -1,29 +1,79 @@
-pub mod control_register;
-
+use crate::{addr_register::AddrRegister, cartridge::Mirroring, control_register::ControlRegister};
+ 
 pub struct PPU{
-    pub char_rom: Vec<u8>,
-    pub palatte_table: [u8;32],
+    pub chr_rom: Vec<u8>,
     pub vram: [u8; 2048],
+    pub palette_table: [u8; 32],
     pub oam_data: [u8; 256],
+
+    pub mirroring: Mirroring,
     addr: AddrRegister,
-    pub mirroring: Mirroring
+    ctrl: ControlRegister,
+    internal_dat_buf:u8,
 }
 
 impl PPU{
-    pub fn new(char_rom: Vec<u8>, mirroring:Mirroring) -> Self{
-        return PPU{
-            char_rom: char_rom,
+    pub fn new(chr_rom: Vec<u8>, mirroring: Mirroring) -> Self{
+        PPU { 
+            chr_rom: chr_rom, 
+            vram: [0; 2048], 
+            palette_table: [0; 32], 
+            oam_data: [0; 256],
             mirroring: mirroring,
-            vram: [0; 2048],
-            oam_data: [0; 64*4],
-            palatte_table: [0; 32],
-            addr: AddrRegister::new()
+            addr: AddrRegister::new(),
+            ctrl: ControlRegister ::new(),
+            internal_dat_buf : 0,
         }
     }
 
-    pub fn write_to_addr(&mut self, value:u8){
-        self.addr.update(value);
+    pub fn write_to_addr(&mut self, data: u8){
+        self.addr.update(data);
     }
 
+    pub fn write_to_ctrl(&mut self, data: u8){
+        self.ctrl.update(data);
+    }
+    pub fn vram_addr_increment(&mut self) {
+        self.addr.increment(self.ctrl.vram_addr_increment());
+    }
 
+    pub fn read_data(&mut self) -> u8{
+        let addr = self.addr.get(); 
+        self.vram_addr_increment();
+        match addr{
+            0..=0x1fff=>{
+                let result = self.internal_dat_buf;
+                self.internal_dat_buf = self.chr_rom[addr as usize];
+                result
+            },
+            0x2000..=0x2fff=>{
+                let result = self.internal_dat_buf;
+                self.internal_dat_buf = self.vram[self.mirror_vram_addr(addr) as usize];
+                result
+            },
+            0x3000..=0x3eff=>panic!("addr space 0x3000..0x3eff is not expected to be used, requested = {} ", addr),
+            0x3f00..=0x3fff=>self.palette_table[(addr-0x3f00)as usize],
+            _=> panic!("unexpected access to mirrored space {}", addr),
+        }
+ 
+    }
+
+    pub fn mirror_vram_addr(&self, addr:u16) -> u16{
+        let mirrored_vram = addr & 0x2fff;
+        let vram_index = mirrored_vram - 0x2000;
+        let nametable = vram_index  / 0x400;
+        match (&self.mirroring, nametable) {
+            (Mirroring::Vertical, 2) | (Mirroring::Vertical, 3) => vram_index -0x800,
+            (Mirroring::Horizontal, 2) => vram_index - 0x400,
+            (Mirroring::Horizontal, 1) => vram_index - 0x400,
+            (Mirroring::Horizontal, 3) => vram_index - 0x800,
+            _=> vram_index,
+        }
+    }
+
+    pub fn write_to_data(&mut self, data: u8){
+        self.vram[self.addr.get() as usize] = data;
+        self.vram_addr_increment();
+    }
 }
+ 
